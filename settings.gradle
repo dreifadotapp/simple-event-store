@@ -1,0 +1,8 @@
+rootProject.name = 'simple-event-store'
+
+include "ses"
+project(":ses").projectDir = file("impl")
+include "ses-examples"
+project(":ses-examples").projectDir = file("examples")
+
+

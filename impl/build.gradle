@@ -1,0 +1,65 @@
+apply plugin: 'jacoco'
+
+dependencies {
+    implementation("com.github.jitpack:gradle-simple:1.0")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    implementation "com.github.dreifadotapp:commons:$commonsVersion"
+    implementation "com.github.dreifadotapp:simple-serialisation:$sisVersion"
+
+
+    // Jackson for JSON and YAML
+    //implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    //implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+
+    testImplementation("com.natpryce:hamkrest:$hamkrestVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+    testImplementation('org.junit.platform:junit-platform-runner:1.0.0')
+}
+
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+}
+
+jacocoTestCoverageVerification {
+    //dependsOn test
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.8
+            }
+        }
+
+        rule {
+            enabled = false
+            element = 'CLASS'
+            includes = ['org.gradle.*']
+
+            limit {
+                counter = 'LINE'
+                value = 'TOTALCOUNT'
+                maximum = 0.3
+            }
+        }
+    }
+}
+
+test {
+    // set heap size for the test JVM(s)
+    minHeapSize = "64m"
+    maxHeapSize = "256m"
+
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
