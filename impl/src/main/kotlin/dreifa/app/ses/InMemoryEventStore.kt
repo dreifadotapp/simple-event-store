@@ -70,6 +70,4 @@ class InMemoryEventStore(initialCapacity: Int = 10) : EventStore {
             }
         }
     }
-
-
 }

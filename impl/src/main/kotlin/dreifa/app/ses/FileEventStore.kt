@@ -24,8 +24,6 @@ class FileEventStore(private val rootDirectory: String = ".") : EventStore {
                 simpleEventStore.store(ev)
             }
         }
-
-
     }
 
     override fun read(query: EventQuery): List<Event> {
@@ -51,7 +49,7 @@ class FileEventStore(private val rootDirectory: String = ".") : EventStore {
     }
 
     private fun eventToJson(ev: Event): String {
-        val payload = if (ev.payload != null) serialiser.serialiseData(ev.payload) else null
+        val payload = if (ev.payload != null) serialiser.toPacket(ev.payload) else null
         val serializeable = SerializableEvent(
             id = ev.id.toString(),
             type = ev.type,
@@ -60,14 +58,14 @@ class FileEventStore(private val rootDirectory: String = ".") : EventStore {
             creator = ev.creator,
             timestamp = ev.timestamp
         )
-        return serialiser.serialiseData(serializeable)
+        return serialiser.toPacket(serializeable)
     }
 
     private fun jsonToEvent(json: String): Event {
-        val serializeable = serialiser.deserialiseData(json).any() as SerializableEvent
+        val serializeable = serialiser.fromPacket(json).any() as SerializableEvent
         val payload =
             if (serializeable.payloadAsJson != null) {
-                serialiser.deserialiseData(serializeable.payloadAsJson).any()
+                serialiser.fromPacket(serializeable.payloadAsJson).any()
             } else null
 
         return Event(
@@ -78,10 +76,7 @@ class FileEventStore(private val rootDirectory: String = ".") : EventStore {
             creator = serializeable.creator,
             timestamp = serializeable.timestamp
         )
-
     }
-
-
 }
 
 data class SerializableEvent(
@@ -92,4 +87,3 @@ data class SerializableEvent(
     val creator: String?,
     val timestamp: Long
 )
-
