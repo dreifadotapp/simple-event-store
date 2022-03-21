@@ -73,5 +73,6 @@ object EverythingQuery : EventQuery()
 
 // All queries must match
 class AllOfQuery(private val queries: List<EventQuery>) : Iterable<EventQuery>, EventQuery() {
+    constructor(vararg queries: EventQuery) : this(queries.asList())
     override fun iterator(): Iterator<EventQuery> = queries.listIterator()
 }
