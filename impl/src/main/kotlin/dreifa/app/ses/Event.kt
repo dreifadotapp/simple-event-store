@@ -1,19 +1,21 @@
 package dreifa.app.ses
 
+import java.lang.RuntimeException
 import java.util.*
 
 
 /**
  * Don't fix the event Id to a specific type just in case UUID
- * doesn't guarantee enough uniqueness with large streams
+ * doesn't guarantee enough uniqueness with large streams and needs to be
+ * changed in the future.
  */
-class EventId(private val id: UUID = UUID.randomUUID()) {
+class EventId(val id: String = UUID.randomUUID().toString()) {
     override fun toString(): String = id.toString()
 
     companion object {
         // only use a string returned to toString()
         fun fromString(id: String): EventId {
-            return EventId(UUID.fromString(id))
+            return EventId(id)
         }
     }
 
@@ -24,7 +26,6 @@ class EventId(private val id: UUID = UUID.randomUUID()) {
     }
 
     override fun hashCode(): Int = this.id.hashCode()
-
 }
 
 /**
@@ -67,18 +68,18 @@ data class Event(
      */
     val timestamp: Long = System.currentTimeMillis(),
 
-    )
+    ) {
+
+    // type safe access to payload
+    inline fun <reified T> payloadAs(): T {
+        if (this.payload is T) return payload
+        if (payload == null) throw RuntimeException("Event `${this.id}`. Null payload cannot be cast to ${T::class.qualifiedName}")
+        throw RuntimeException("Event `${this.id}`. payload of ${payload::class.qualifiedName} cannot be cast to ${T::class.qualifiedName}")
+    }
+}
 
 // marker interface (is this useful)
 interface EventFactory {
     fun eventType(): String
     fun typeFilter(): EventQuery = EventTypeQuery(eventType())
-}
-
-object OppsEventFactory : EventFactory {
-    fun get(): Event {
-        return Event(type = "OppsEvent")
-    }
-
-    override fun eventType(): String = "OppsEvent"
 }
