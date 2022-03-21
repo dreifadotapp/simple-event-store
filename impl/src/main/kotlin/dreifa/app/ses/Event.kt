@@ -2,7 +2,7 @@ package dreifa.app.ses
 
 import java.lang.RuntimeException
 import java.util.*
-
+import kotlin.reflect.KClass
 
 /**
  * Don't fix the event Id to a specific type just in case UUID
@@ -71,7 +71,7 @@ data class Event(
     ) {
 
     // type safe access to payload
-    inline fun <reified T> payloadAs(): T {
+    inline fun <reified T > payloadAs(t : Class<T>): T  {
         if (this.payload is T) return payload
         if (payload == null) throw RuntimeException("Event `${this.id}`. Null payload cannot be cast to ${T::class.qualifiedName}")
         throw RuntimeException("Event `${this.id}`. payload of ${payload::class.qualifiedName} cannot be cast to ${T::class.qualifiedName}")
