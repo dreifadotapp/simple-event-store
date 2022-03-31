@@ -59,7 +59,6 @@ interface LastEventId {
 // all the possible queries
 sealed class EventQuery
 
-
 /**
  * Common queries
  */
