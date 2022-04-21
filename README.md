@@ -44,7 +44,7 @@ There are two basic restrictions on an individual event:
 
 As with everything in [Dreifa dot App](https://dreifadotapp.app), this library has minimal dependencies.
 
-* Kotlin 1.4
+* Kotlin 1.5
 * Java 11
 * The object [Registry](https://github.com/dreifadotapp/registry#readme)
 * The [Simple Serialisation(sis)](https://github.com/dreifadotapp/simple-serialisation#readme) module
