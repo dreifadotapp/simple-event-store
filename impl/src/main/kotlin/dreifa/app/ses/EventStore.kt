@@ -1,23 +1,37 @@
 package dreifa.app.ses
 
 import dreifa.app.clock.PlatformTimer
+import dreifa.app.opentelemetry.OpenTelemetryContext
 import dreifa.app.types.LikeString
 import java.lang.RuntimeException
 
+data class ClientContext(val telemetryContext: OpenTelemetryContext) {
+    companion object {
+        fun noop(): ClientContext = ClientContext(OpenTelemetryContext.root())
+    }
+}
 
 interface EventWriter {
-    fun store(events: List<Event>): EventWriter
+    fun store(ctx: ClientContext, events: List<Event>): EventWriter
 
-    fun storeWithChecks(events: List<Event>)
+    fun store(events: List<Event>): EventWriter = store(ClientContext.noop(), events)
 
-    fun store(event: Event): EventWriter {
-        return store(listOf(event))
-    }
+    fun storeWithChecks(ctx: ClientContext, events: List<Event>)
+
+    fun storeWithChecks(events: List<Event>) = storeWithChecks(ClientContext.noop(), events)
+
+    fun store(ctx: ClientContext, event: Event): EventWriter = store(ctx, listOf(event))
+
+    fun store(event: Event): EventWriter = store(ClientContext.noop(), event)
+
 }
 
 
 interface EventReader {
-    fun read(query: EventQuery): List<Event>
+    fun read(ctx: ClientContext, query: EventQuery): List<Event>
+
+    fun read(query: EventQuery): List<Event> = read(ClientContext.noop(), query)
+
 
     /**
      * A simple polling that will block until at least
@@ -27,17 +41,24 @@ interface EventReader {
      * should be used with care in production like applications
      */
     fun pollForEvent(
+        ctx: ClientContext,
         query: EventQuery,
         delayInTicks: Int = 5,
         timeoutMs: Long = 10000
     ) {
         val cutOff = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < cutOff) {
-            if (this.read(query).isNotEmpty()) return
+            if (this.read(ctx, query).isNotEmpty()) return
             PlatformTimer.sleepForTicks(delayInTicks)
         }
         throw ESException("Timed out waiting for event")
     }
+
+    fun pollForEvent(
+        query: EventQuery,
+        delayInTicks: Int = 5,
+        timeoutMs: Long = 10000
+    ) = pollForEvent(dreifa.app.ses.ClientContext.Companion.noop(), query, delayInTicks, timeoutMs)
 }
 
 interface EventStore : EventReader, EventWriter
@@ -73,5 +94,6 @@ object EverythingQuery : EventQuery()
 // All queries must match
 class AllOfQuery(private val queries: List<EventQuery>) : Iterable<EventQuery>, EventQuery() {
     constructor(vararg queries: EventQuery) : this(queries.asList())
+
     override fun iterator(): Iterator<EventQuery> = queries.listIterator()
 }

@@ -9,7 +9,7 @@ import kotlin.collections.HashMap
 class InMemoryEventStore(initialCapacity: Int = 10) : EventStore {
     private val events: MutableList<Event> = ArrayList(initialCapacity)
     private val eventIdLookup: MutableMap<EventId, Int> = HashMap(initialCapacity)
-    override fun read(query: EventQuery): List<Event> {
+    override fun read(ctx: ClientContext, query: EventQuery): List<Event> {
         val lastEventIndex = checkLastEventId(0, query)
         if (lastEventIndex == events.size) return emptyList()
         return this.events
@@ -17,7 +17,7 @@ class InMemoryEventStore(initialCapacity: Int = 10) : EventStore {
             .filter { checkFilter(it, query) }
     }
 
-    override fun store(events: List<Event>): EventWriter {
+    override fun store(ctx: ClientContext, events: List<Event>): EventWriter {
         synchronized(this) {
             var index = this.events.size
             events.forEach {
@@ -49,7 +49,7 @@ class InMemoryEventStore(initialCapacity: Int = 10) : EventStore {
     }
 
 
-    override fun storeWithChecks(events: List<Event>) {
+    override fun storeWithChecks(ctx: ClientContext, events: List<Event>) {
         TODO("Not yet implemented")
     }
 

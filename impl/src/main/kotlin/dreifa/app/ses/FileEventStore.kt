@@ -21,16 +21,16 @@ class FileEventStore(private val rootDirectory: String = ".") : EventStore {
             val file = it.toFile()
             if (file.isFile) {
                 val ev = jsonToEvent(file.readText())
-                simpleEventStore.store(ev)
+                simpleEventStore.store(ClientContext.noop(), ev)
             }
         }
     }
 
-    override fun read(query: EventQuery): List<Event> {
-        return simpleEventStore.read(query)
+    override fun read(ctx: ClientContext, query: EventQuery): List<Event> {
+        return simpleEventStore.read(ctx, query)
     }
 
-    override fun store(events: List<Event>): EventWriter {
+    override fun store(ctx: ClientContext, events: List<Event>): EventWriter {
         synchronized(this) {
             events.forEach {
                 eventCount++
@@ -38,13 +38,13 @@ class FileEventStore(private val rootDirectory: String = ".") : EventStore {
                     eventCount.toString().padStart(5, '0') + "-event.json"
 
                 File("${rootDirectory}/$fileName").writeText(eventToJson(it))
-                simpleEventStore.store(it)
+                simpleEventStore.store(ctx, it)
             }
         }
         return this
     }
 
-    override fun storeWithChecks(events: List<Event>) {
+    override fun storeWithChecks(ctx: ClientContext, events: List<Event>) {
         TODO("Not yet implemented")
     }
 
