@@ -12,6 +12,8 @@ dependencies {
     compile "com.github.dreifadotapp:commons:$commonsVersion"
     compile "com.github.dreifadotapp:simple-serialisation:$sisVersion"
     compile "com.github.dreifadotapp:open-telemetry:$openTelementryVersion"
+    compile "com.github.dreifadotapp:registry:$registryVersion"
+
 
     testImplementation("com.natpryce:hamkrest:$hamkrestVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
