@@ -4,6 +4,8 @@ import dreifa.app.opentelemetry.Helpers
 import dreifa.app.opentelemetry.OpenTelemetryProvider
 import dreifa.app.opentelemetry.SpanDetails
 import dreifa.app.registry.Registry
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
 import kotlin.collections.ArrayList
@@ -22,7 +24,7 @@ class InMemoryEventStore(registry: Registry = Registry(), initialCapacity: Int =
         return Helpers.runWithCurrentTelemetry(
             provider = provider,
             tracer = tracer,
-            spanDetails = SpanDetails("events-store", SpanKind.INTERNAL),
+            spanDetails = buildQuerySpan(query),
             block = {
                 val lastEventIndex = checkLastEventId(0, query)
                 if (lastEventIndex == events.size) {
@@ -53,6 +55,31 @@ class InMemoryEventStore(registry: Registry = Registry(), initialCapacity: Int =
             }
         )
         return this
+    }
+
+    private fun buildQuerySpan(query: EventQuery): SpanDetails {
+        return when (query) {
+            is AggregateIdQuery ->
+                SpanDetails(
+                    "events-store",
+                    SpanKind.INTERNAL,
+                    Attributes.of(AttributeKey.stringKey("dreifa.app.ses.aggregate-id"), query.aggregateId)
+                )
+            is AllOfQuery -> {
+                // todo - check for aggregate id
+
+                SpanDetails(
+                    "events-store",
+                    SpanKind.INTERNAL
+                )
+            }
+            else -> {
+                SpanDetails(
+                    "events-store",
+                    SpanKind.INTERNAL
+                )
+            }
+        }
     }
 
     private fun checkLastEventId(lastEventIndex: Int, query: EventQuery): Int {
