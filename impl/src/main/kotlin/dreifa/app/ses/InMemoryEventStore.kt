@@ -19,10 +19,9 @@ class InMemoryEventStore(registry: Registry = Registry(), initialCapacity: Int =
     private val provider = registry.getOrNull(OpenTelemetryProvider::class.java)
 
     override fun read(ctx: ClientContext, query: EventQuery): List<Event> {
-        return Helpers.runWithTelemetry(
+        return Helpers.runWithCurrentTelemetry(
             provider = provider,
             tracer = tracer,
-            telemetryContext = ctx.telemetryContext,
             spanDetails = SpanDetails("events-store", SpanKind.INTERNAL),
             block = {
                 val lastEventIndex = checkLastEventId(0, query)
@@ -38,10 +37,9 @@ class InMemoryEventStore(registry: Registry = Registry(), initialCapacity: Int =
     }
 
     override fun store(ctx: ClientContext, events: List<Event>): EventWriter {
-        Helpers.runWithTelemetry(
+        Helpers.runWithCurrentTelemetry(
             provider = provider,
             tracer = tracer,
-            telemetryContext = ctx.telemetryContext,
             spanDetails = SpanDetails("events-store", SpanKind.INTERNAL),
             block = {
                 synchronized(this) {
