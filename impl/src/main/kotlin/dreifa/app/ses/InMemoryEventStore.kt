@@ -42,7 +42,7 @@ class InMemoryEventStore(registry: Registry = Registry(), initialCapacity: Int =
         Helpers.runWithCurrentTelemetry(
             provider = provider,
             tracer = tracer,
-            spanDetails = SpanDetails("events-store", SpanKind.INTERNAL),
+            spanDetails = SpanDetails("dreifa.app.ses.events-store", SpanKind.INTERNAL),
             block = {
                 synchronized(this) {
                     var index = this.events.size
@@ -61,21 +61,25 @@ class InMemoryEventStore(registry: Registry = Registry(), initialCapacity: Int =
         return when (query) {
             is AggregateIdQuery ->
                 SpanDetails(
-                    "events-store",
+                    "dreifa.app.ses.events-read",
                     SpanKind.INTERNAL,
                     Attributes.of(AttributeKey.stringKey("dreifa.app.ses.aggregate-id"), query.aggregateId)
                 )
             is AllOfQuery -> {
-                // todo - check for aggregate id
-
+                val builder = Attributes.builder()
+                query.filterIsInstance<AggregateIdQuery>()
+                    .forEach {
+                        builder.put("dreifa.app.ses.aggregate-id", it.aggregateId)
+                    }
                 SpanDetails(
-                    "events-store",
-                    SpanKind.INTERNAL
+                    "dreifa.app.ses.events-read",
+                    SpanKind.INTERNAL,
+                    builder.build()
                 )
             }
             else -> {
                 SpanDetails(
-                    "events-store",
+                    "dreifa.app.ses.events-read",
                     SpanKind.INTERNAL
                 )
             }
